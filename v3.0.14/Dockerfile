@@ -65,15 +65,18 @@ ENV DEPENDENCIES="libboost-filesystem1.55.0 \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        $BUILD_DEPENDENCIES $DEPENDENCIES \
-    && git clone https://github.com/mapnik/mapnik.git \
+        $BUILD_DEPENDENCIES $DEPENDENCIES
+
+RUN git clone https://github.com/mapnik/mapnik.git \
     && cd mapnik \
     && git checkout $MAPNIK_VERSION \
     && git submodule update --init \
-    && python scons/scons.py INPUT_PLUGINS='all' \
-    && make \
-    && make install \
-    && cd - \
+    && python scons/scons.py INPUT_PLUGINS='all'
+    
+WORKDIR mapnik
+RUN JOBS=8 make
+RUN JOBS=8 make install
+RUN cd .. \
     && rm -r mapnik \
     && apt-get autoremove -y --purge $BUILD_DEPENDENCIES \
     && rm -rf /var/lib/apt/lists/*
